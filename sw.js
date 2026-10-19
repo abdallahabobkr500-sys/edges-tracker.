@@ -1,8 +1,14 @@
-const VER = "edges-tracker-v2";
-const CORE = ["./","./index.html","./manifest.webmanifest","./icons/icon-192.png","./icons/icon-512.png","./icons/icon-maskable-512.png","./icons/apple-touch-icon.png","./icons/favicon-32.png"];
+const VER = "edges-tracker-v4";
+const CORE = ["./","./index.html","./manifest.webmanifest","./icon-192.png","./icon-512.png","./icon-maskable-512.png","./apple-touch-icon.png","./favicon-32.png"];
 
 self.addEventListener("install", e => {
-  e.waitUntil(caches.open(VER).then(c => c.addAll(CORE)).then(() => self.skipWaiting()));
+  e.waitUntil((async () => {
+    const c = await caches.open(VER);
+    await c.add("./index.html");                       // the app itself is mandatory
+    await Promise.all(CORE.filter(u => u !== "./index.html")
+      .map(u => c.add(u).catch(() => {})));            // a missing icon must never break offline mode
+    await self.skipWaiting();
+  })());
 });
 
 self.addEventListener("activate", e => {
